@@ -164,3 +164,41 @@ private inner class ConnectThread(device: BluetoothDevice) : Thread() {
    }
 }
 ```
+
+## Bluetooth LE
+Data transfered with BLE is shared with other apps on your phone, so don't share sensitive information.
+### Scan BLUE devices
+To scan for BLE devices you need to obtain `bluetoothLEScanner` from the adapter. The scanner is null if bluetooth is disabled on the device. 
+Note that you cannot scan for BT and BLE at the same time.
+```kotlin
+private val bluetoothLeScanner = bluetoothAdapter.bluetoothLeScanner
+private var scanning = false
+private val handler = Handler()
+
+// Stops scanning after 10 seconds.
+private val SCAN_PERIOD: Long = 10000
+
+private fun scanLeDevice() {
+    if (!scanning) { // Stops scanning after a pre-defined scan period.
+        handler.postDelayed({
+            scanning = false
+            bluetoothLeScanner.stopScan(leScanCallback)
+        }, SCAN_PERIOD)
+        scanning = true
+        bluetoothLeScanner.startScan(leScanCallback)
+    } else {
+        scanning = false
+        bluetoothLeScanner.stopScan(leScanCallback)
+    }
+}
+
+private val leDeviceListAdapter = LeDeviceListAdapter() // List of devices
+// Device scan callback.
+private val leScanCallback: ScanCallback = object : ScanCallback() {
+    override fun onScanResult(callbackType: Int, result: ScanResult) {
+        super.onScanResult(callbackType, result)
+        leDeviceListAdapter.addDevice(result.device)
+        leDeviceListAdapter.notifyDataSetChanged()
+    }
+}
+```
